@@ -15,10 +15,10 @@ def decrypt():
     cpassword = sys.argv[1]
     cpassword_padded = cpassword + "=" * (4 - (len(cpassword) % 4)) #add padding to b64 string for decoding
     decoded = base64.b64decode(cpassword_padded)
-    IV = decoded[:AES.block_size] # Extract IV from the beginning of the decoded string
+    IV = "\x00" * 16
     aes = AES.new(key, AES.MODE_CBC, IV)
     decrypted = aes.decrypt(decoded)
-    print "Password = %s" %(decrypted)
+    print "Password = %s" %(decrypted.decode('utf8'))
 
 if len(sys.argv) != 2:
     usage()
