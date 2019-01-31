@@ -1,8 +1,9 @@
-﻿Write-Output  "
- __      ___         _               ___     _      ___ _           _           
- \ \    / (_)_ _  __| |_____ __ ____| _ \_ _(___ __/ __| |_  ___ __| |_____ _ _ 
-  \ \/\/ /| | ' \/ _` / _ \ V  V (_-|  _| '_| \ V | (__| ' \/ -_/ _| / / -_| '_|
-   \_/\_/ |_|_||_\__,_\___/\_/\_//__|_| |_| |_|\_/ \___|_||_\___\__|_\_\___|_|  
+﻿$art = "
+ _       ___           __                      ____       _          ________              __            
+| |     / (_)___  ____/ /___ _      _______   / __ \_____(_)   __   / ____/ /_  ___  _____/ /_____  _____
+| | /| / / / __ \/ __  / __ \ | /| / / ___/  / /_/ / ___/ / | / /  / /   / __ \/ _ \/ ___/ //_/ _ \/ ___/
+| |/ |/ / / / / / /_/ / /_/ / |/ |/ (__  )  / ____/ /  / /| |/ /  / /___/ / / /  __/ /__/ ,< /  __/ /    
+|__/|__/_/_/ /_/\__,_/\____/|__/|__/____/  /_/   /_/  /_/ |___/   \____/_/ /_/\___/\___/_/|_|\___/_/          
                                                                                     By 0xc0ffeeadd1c7`r`n"
 
 function GetSystemInfo {
@@ -71,12 +72,59 @@ function GetTaskInfo {
   Get-ScheduledTask
 
   Write-Output "[*] Running Services`r`n"
-  Get-Service | Where-Object { $_.Status -eq "Running" }
+  Get-Service | Where-Object { $_.Status -eq "Running" } | Format-Table
+}
+
+function GetPasswordFiles {
+  
+  Write-Output "[*] Files containing potential passwords`r`n"
+
+  $password_files = @("sysprep.inf", "sysprep.xml", "Unattended.xml
+", "Unattended.xml", "Services.xml", "ScheduledTassk.xml", "Printers.xml", "Drives.xml", "DataSources.xml", "groups.xml")
+
+  $file_extensions = @("*.txt", "*.php", "*.conf", "*.py", "*.ps1", "*.conf", "*.config", "*.xml", "*.ini")
+
+  Get-ChildItem -Path C:\Users -Recurse -Force -ErrorAction SilentlyContinue -Include $file_extensions  | Select-String -pattern "password" | select Path | Get-Unique
+ 
+}
+
+function GetRegistryItems {
+
+  Write-Output "[*] `"AlwaysInstallElevated Registry Values`"`r`n"
+
+  $reg_key = ":\SOFTWARE\Policies\Microsoft\Windows\Installer\AlwaysInstallElevated"
+
+  if ((Test-Path ("HKLM" + $reg_key)) -and (Test-Path ("HKCU" + $reg_key)))
+  {
+    $hklm_key = Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer" -Name "AlwaysInstallElevated"
+    $hkcu_key = Get-ItemProperty -Path "HKCU:\SOFTWARE\Policies\Microsoft\Windows\Installer" -Name "AlwaysInstallElevated"
+
+    if ($hklm_key.Name -eq 1 -and $hkcu_key.Name -eq 1)
+    {
+      Write-Output "[+] SYSTEM Privilege Escalation Found - MSI package installation : http://www.greyhathacker.net/?p=185`r`n"
+    }
+  } 
+}
+
+function ExploitSuggester {
+
+  #include rudimentary cross-check for hotfixes and OS version against list of known KBs
 }
 
 
+Write-Host $art -ForegroundColor Yellow
+Write-Host "[*] Starting Enumeration. This can take some time..." -ForegroundColor Green
+Write-Host "[+] Getting System info..." -ForegroundColor Green
 GetSystemInfo
+Write-Host "[+] Getting Environment Variables..." -ForegroundColor Green
 GetEnvironmentVariables
+Write-Host "[+] Getting User info..." -ForegroundColor Green
 GetUserInfo
+Write-Host "[+] Getting Network info..." -ForegroundColor Green
 GetNetworkInfo
+Write-Host "[+] Getting Scheduled Tasks..." -ForegroundColor Green
 GetTaskInfo
+Write-Host "[+] Searching Filesystem for passwords..." -ForegroundColor Green
+GetPasswordFiles
+Write-Host "[+] Searching Registry..." -ForegroundColor Green
+GetRegistryItems
