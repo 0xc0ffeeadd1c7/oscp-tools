@@ -69,6 +69,9 @@ function GetNetworkInfo {
 
 function GetTaskInfo {
   
+  Write-Output "`r`n[*] Process List`r`n"
+  tasklist 
+
   Write-Output "`r`n[*] Scheduled Tasks`r`n"
   Get-ScheduledTask
 
