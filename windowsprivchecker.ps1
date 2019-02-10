@@ -1,10 +1,12 @@
-﻿$banner = "
+﻿#Windows host enumeration script written by Apra. Work in progress...
+
+$banner = "
  _       ___           __                      ____       _          ________              __            
 | |     / (_)___  ____/ /___ _      _______   / __ \_____(_)   __   / ____/ /_  ___  _____/ /_____  _____
 | | /| / / / __ \/ __  / __ \ | /| / / ___/  / /_/ / ___/ / | / /  / /   / __ \/ _ \/ ___/ //_/ _ \/ ___/
 | |/ |/ / / / / / /_/ / /_/ / |/ |/ (__  )  / ____/ /  / /| |/ /  / /___/ / / /  __/ /__/ ,< /  __/ /    
 |__/|__/_/_/ /_/\__,_/\____/|__/|__/____/  /_/   /_/  /_/ |___/   \____/_/ /_/\___/\___/_/|_|\___/_/          
-                                                                                    By 0xc0ffeeadd1c7`r`n"
+                                                                                    `r`n"
 
 function GetSystemInfo {
   
@@ -147,8 +149,6 @@ function EnumerateServices
    }   
   }
 }
-
-
 
 Write-Host $banner -ForegroundColor Yellow
 Write-Host "[*] Starting Enumeration. This can take some time..." -ForegroundColor Green
