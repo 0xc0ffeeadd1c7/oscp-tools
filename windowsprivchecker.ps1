@@ -148,10 +148,6 @@ function EnumerateServices
   }
 }
 
-function ExploitSuggester {
-
-  #include rudimentary cross-check for hotfixes and OS version against list of known KBs
-}
 
 
 Write-Host $banner -ForegroundColor Yellow
