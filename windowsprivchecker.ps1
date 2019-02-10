@@ -1,4 +1,4 @@
-﻿$art = "
+﻿$banner = "
  _       ___           __                      ____       _          ________              __            
 | |     / (_)___  ____/ /___ _      _______   / __ \_____(_)   __   / ____/ /_  ___  _____/ /_____  _____
 | | /| / / / __ \/ __  / __ \ | /| / / ___/  / /_/ / ___/ / | / /  / /   / __ \/ _ \/ ___/ //_/ _ \/ ___/
@@ -9,15 +9,16 @@
 function GetSystemInfo {
   
   Write-Output "[*] System Info"
- 
+
+  # Quite possibly want more information here
   systeminfo /fo csv | ConvertFrom-Csv | select OS*, System*, Domain, Hotfix* | Format-List 
   
 } 
 
 function GetEnvironmentVariables {
-
+  
   Write-Output "[*] Environment Variables`r`n"
-
+  # Again, I've only pulled a small section of the useful information
   $hostname = $env:COMPUTERNAME
   $username = $env:USERNAME
   $path = $env:Path
@@ -51,7 +52,7 @@ function GetUserInfo {
 }
 
 function GetNetworkInfo {
-
+  #Output basic networking information
   Write-Output "[*] Network Information`r`n"
   ipconfig /all
   route print
@@ -68,21 +69,21 @@ function GetNetworkInfo {
 
 function GetTaskInfo {
   
-  Write-Output "[*] Scheduled Tasks`r`n"
+  Write-Output "`r`n[*] Scheduled Tasks`r`n"
   Get-ScheduledTask
 
-  Write-Output "[*] Running Services`r`n"
-  Get-Service | Where-Object { $_.Status -eq "Running" } | Format-Table
 }
 
 function GetPasswordFiles {
-  
+  #Enumerate filesystem for files commonly containing passwords, and search files for the word "password"
   Write-Output "[*] Files containing potential passwords`r`n"
 
   $password_files = @("sysprep.inf", "sysprep.xml", "Unattended.xml
 ", "Unattended.xml", "Services.xml", "ScheduledTassk.xml", "Printers.xml", "Drives.xml", "DataSources.xml", "groups.xml")
 
-  $file_extensions = @("*.txt", "*.php", "*.conf", "*.py", "*.ps1", "*.conf", "*.config", "*.xml", "*.ini")
+  $file_extensions = @("*.txt", "*.php", "*.conf", "*.py", "*.ps1", "*.conf", "*.config", "*.xml", "*.ini", "*.ps1")
+
+  Get-ChildItem -Path $env:SystemRoot -Recurse -Force -ErrorAction SilentlyContinue -Include $password_files | select Path
 
   Get-ChildItem -Path C:\Users -Recurse -Force -ErrorAction SilentlyContinue -Include $file_extensions  | Select-String -pattern "password" | select Path | Get-Unique
  
@@ -106,13 +107,51 @@ function GetRegistryItems {
   } 
 }
 
+function EnumerateServices
+{
+  #Get service names and paths, then check service permissions for low privileged users
+  Write-Output "[*] Getting Unsecure Service Permissions"
+  $services = get-wmiobject -query 'select * from win32_service'
+  foreach ($service in $services) 
+  {
+    $path=$Service.Pathname
+    if ("$path")
+    {
+     if (-not(test-path "$path" -ea silentlycontinue))
+     {
+      if ($Service.Pathname -match "(\""([^\""]+)\"")|((^[^\s]+)\s)|(^[^\s]+$)") 
+      {
+        $path = $matches[0] –replace """",""
+      }
+     }
+     if ("$path") 
+     {
+       $ServiceName = $service.Displayname
+       $secure=get-acl $path  # This will error out if executables are no-longer in binpath
+       foreach ($item in $secure.Access) 
+       {
+         if ( ($item.IdentityReference -match "NT AUTHORITY\\Authenticated Users"   ) -or
+                 ($item.IdentityReference -match "NT AUTHORITY\\Users" ))
+         {
+           if ( ($item.FilesystemRights -match "FullControl|Modify|Write") )
+           {
+             Write-Output "[+] Possibly Unsecure Service: $ServiceName`r`n"
+             Write-Output $item | Select IdentityReference, FilesystemRights
+           }
+         }
+       }     
+     }
+   }   
+  }
+}
+
 function ExploitSuggester {
 
   #include rudimentary cross-check for hotfixes and OS version against list of known KBs
 }
 
 
-Write-Host $art -ForegroundColor Yellow
+Write-Host $banner -ForegroundColor Yellow
 Write-Host "[*] Starting Enumeration. This can take some time..." -ForegroundColor Green
 Write-Host "[+] Getting System info..." -ForegroundColor Green
 GetSystemInfo
@@ -128,3 +167,5 @@ Write-Host "[+] Searching Filesystem for passwords..." -ForegroundColor Green
 GetPasswordFiles
 Write-Host "[+] Searching Registry..." -ForegroundColor Green
 GetRegistryItems
+Write-Host "[+] Enumerating Services..." -ForegroundColor Green
+EnumerateServices
