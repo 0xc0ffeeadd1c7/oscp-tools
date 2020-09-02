@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import requests
+import requests.auth
+import praw
 from bs4 import BeautifulSoup
 import json
 import random
@@ -13,12 +15,32 @@ bot = commands.Bot(command_prefix='#')
 
 print(discord.__version__)
 
+
+async def get_destiny_memes(ctx):
+    reddit = praw.Reddit(client_id="",
+                         client_secret="",
+                         password="",
+                         user_agent="destinymemes bot 0.1",
+                         username="")
+
+    subreddit = reddit.subreddit("destiny2")
+
+    dankest_meme = ""
+    most_updoots = 0
+
+    for submission in subreddit.stream.submissions():
+        if submission.link_flair_text == "Meme / Humour":
+            embed = discord.Embed(title = submission.title, color=0x00ff00)
+            embed.set_image(url=submission.url)
+            await bot.get_channel('').send(embed = embed)
+    await asyncio.sleep(60*60*24)
+
+
 @bot.event
 async def on_ready():
     print("Bot is ready")
     print("Bot running on " + bot.user.name)
     print("With the id {}".format(str(bot.user.id)))
-
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -54,5 +76,7 @@ async def findxur(ctx):
             await ctx.send("Beep Boop whoever coded me sucks. I can't find Xur right now :(")
     else:
         await ctx.send("Xûr isn't available rn")
+
+@bot.loop.create_task(get_destiny_memes)
 
 bot.run("<secret here>")
