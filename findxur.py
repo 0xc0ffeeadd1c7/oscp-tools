@@ -13,9 +13,6 @@ bot = commands.Bot(command_prefix='#')
 
 print(discord.__version__)
 
-heroes_list = []
-moved = False
-
 @bot.event
 async def on_ready():
     print("Bot is ready")
