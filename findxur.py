@@ -53,7 +53,7 @@ async def on_ready():
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    if str(member) == "BloodyMany#0585":
+    if str(member) == "":
         time.sleep(random.randrange(60, 300))
         for guild in bot.guilds:
             chann = random.choice(guild.voice_channels)
