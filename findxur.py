@@ -15,25 +15,34 @@ bot = commands.Bot(command_prefix='#')
 
 print(discord.__version__)
 
+async def get_destiny_memes():
+    await bot.wait_until_ready()
+    while True:
+        reddit = praw.Reddit(client_id="",
+                             client_secret="",
+                             password="",
+                             user_agent="destinymemes bot 0.1",
+                             username="")
 
-async def get_destiny_memes(ctx):
-    reddit = praw.Reddit(client_id="",
-                         client_secret="",
-                         password="",
-                         user_agent="destinymemes bot 0.1",
-                         username="")
+        subreddit = reddit.subreddit("destiny2")
 
-    subreddit = reddit.subreddit("destiny2")
+        submission_id = "test"
+        most_updoots = 0
 
-    dankest_meme = ""
-    most_updoots = 0
+        for submission in subreddit.hot():
+            if submission.link_flair_text == "Meme / Humor" and submission.url.endswith(".jpg"):
+                if submission.score > most_updoots:
+                    most_updoots = submission.score
+                    submission_id = submission.id
 
-    for submission in subreddit.stream.submissions():
-        if submission.link_flair_text == "Meme / Humour":
-            embed = discord.Embed(title = submission.title, color=0x00ff00)
-            embed.set_image(url=submission.url)
-            await bot.get_channel('').send(embed = embed)
-    await asyncio.sleep(60*60*24)
+        dankest_meme = reddit.submission(id=submission_id)
+        embed = discord.Embed(title = dankest_meme.title, color=0x00ff00)
+        embed.set_image(url = dankest_meme.url)
+        channel = bot.get_channel()
+        await channel.send(embed=embed)
+
+        await asyncio.sleep(60*60*4)
+)
 
 
 @bot.event
@@ -77,6 +86,5 @@ async def findxur(ctx):
     else:
         await ctx.send("Xûr isn't available rn")
 
-@bot.loop.create_task(get_destiny_memes)
-
+bot.loop.create_task(get_destiny_memes())
 bot.run("<secret here>")
